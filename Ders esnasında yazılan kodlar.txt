@@ -1,0 +1,242 @@
+1//ekranı temizle 
+cls
+
+2// products isminde database oluşturalım
+use products --> içi boşsa database gelmez
+
+3// hangi db deyim
+db--> enter yapınca hangi dbdeysek ekrana gelir
+
+4/ databasleri göster
+show dbs--> enter dbler ekrana gelir --> içi boşsa db hala gorunmez
+
+5//electronics isminde collection(table) oluşturalım
+db.createCollection("electronics")
+
+6// mevcut collectinları göster
+db.getCollectionNames() --> electronics sonucu geldi
+
+7//aktif collectionları silelim
+db.electronics.drop()
+
+8//collectiona 1 tane döküman eklıyelım
+db.electronics.insertOne({"price":230, "name":"TV"})
+
+data ekleme secenekleri ;
+1- add data
+2- clone (içerikte değişklik yapabiliyoruz
+3- terminalde 8. satırdaki gibi kod yazarak
+
+TRİCK : collection oluşturmadan doğrudan insertOne() methodu ile data girilebilir
+
+9//birden fazla dokuman girelim
+db.electronics.insertMany([ {"name":"ipod" , "price" : 111},{"name":"iphone14"},{"name":"Radio", "price":53,"tax":10}])
+
+TRİCK : insertMany komutu ile data girilirken elemanlar "[]< ile depolanır ve her bir documan "{}" içerisine eklenir ve virgul ile ayrılır
+TRİCK 2 : [ ve { ler karısmaması için ; 3 eleman gireceksek önce [{},{},{},] boş şablonoluşturup ilerlemek hatayı azaltır
+tek data insertOne birden fazla ise insertMany kullanırız
+
+10//tek veya birden fazla dokuman girelim
+db.electronics.insert({"name":"iron","tax":12})--> en son güncellemelerle iptal edilebilecek komut kullanınca bu uyarıyı veriyor
+db.electronics.insert([{"price":123},{"name":"radio","tax":8}])
+
+TRİCK : insert() methodu depricate edilmiş method
+
+11// collectioni silelim
+db.electronics.drop()
+
+12// database silelim
+db.dropDatabase()
+
+13//bütün dokumanları okuyalım
+db.electronics.find() veya db.electronics.find().pretty()
+
+14// ilk 2 dokuman gelsin
+db.electronics.find().limit(2)
+
+15//sadece 3. dokumanı istersem
+db.electronics.find().skip(2).limit(1)
+
+16//5. dokumandan ıtibaren ilk iki dokumanı getir
+db.electronics.find().skip(4).limit(2)
+
+17//name Tv olanları getirelim
+db.electronics.find({"name":"TV"})
+
+18//ismi TV ve price bilgisi 230 olan dokumanları getir
+db.electronics.find({"name":"TV","price":230}) veya db.electronics.find({$and:[{"name":"TV"},{"price":230}]})
+
+19//ismi TV veya radio olan dokumanı getir
+db.electronics.find({$or:[{"name":"TV"},{"name":"radio"}]})
+
+20//Radioların sadece fiyatlarını görelim
+db.electronics.find({"name":"Radio"},{"price":1})--> bu selide id bilgisi ile gelir 
+db.electronics.find({"name":"Radio"},{"price":1,"_id":0})--> 1 yazdıgımızda içerenleri getir ancak 0 yazdıgımızda içermeyenleri getir anlamındadır
+TRİK : find () methodu parametre olarak 2 adet {}{} alırsa 1. si filtremiz 2. ise aksiyondur(ekrana hangi dataların geleceğini)
+
+
+
+21//yukarıdaki task id bilgisi gözükmeden gelsin
+cevap
+db.electronics.find({"name":"Radio"},{"price":1,"_id":0})--> 1 yazdıgımızda içerenleri getir ancak
+ 0 yazdıgımızda içermeyenleri getir anlamındadır
+
+
+
+22// Dökümanların sadece priece ve name bilgileri gelsin
+cevap
+db.electronics.find({},{"name":1,"price":1,"_id":0})
+TRİCK : sort methodunda parametre olarak "-1" girilirse büyükten küçüğe dogu sıralar. default olarak "1" gelir buda natural orderdir
+
+
+23//yukarıdakı soruyu price degerine göre sıralayalım
+cevap
+db.electronics.find({},{"name":1,"price":1,"_id":0}).sort("price")
+
+
+24//ilk dökümanı okumak istersem
+cevap
+ db.electronics.findOne()
+
+
+25//TV leri azalan fiyata göre getirelim
+cevap
+db.electronics.find({"name":"TV"},{"name":1,"price":1,"_id":0}).sort({"price":-1})
+
+
+NOT : Kıyaslama operatorleri
+Comparison Operators
+    Eşitlik     ==> $eq--> equals
+    Küçüktür    ==> $lt--> less than ingilizce karsılıkları
+    Büyüktür    ==> $gt--> greater than
+    Küçük eşit  ==> $lte--> less than equals
+    Büyük eşit  ==> $gte-->greater than equals
+    Eşit değil  ==> $ne-->not equals
+    Dizi içinde ==> $in-->
+    Dizi değil  ==> $nin
+	
+	
+26//fiyatı 230 olan tv yi getir
+cevap
+db.electronics.find({"price":230,"name":"TV"})
+
+27//fiyatı 95 olan dokumanı bulun
+cevap
+db.electronics.find({"price":95}) veya
+db.electronics.find({"price":{$eq:95}}) şeklinde "$eq" operator ile de çözülebilir
+
+
+28//price 300 den az veya eşit olan dökümanları bulun
+db.electronics.find({"price":{$lte:300}})
+
+
+29// Yukarıdaki soruda id çıktıları gözükmesin
+cevap
+db.electronics.find({"price":{$lte:300}},{"_id":0})
+
+
+30// price i 100 den buyuk veya eşit olan dokumanları getırın
+cevap
+db.electronics.find({"price":{$gte:100}})
+
+	
+31// price 230,75,120 den biri olan dokumanları getirin
+ cevap
+ db.electronics.find({"price": {$in:[120,230,75]}}) --> operator ile veya
+ db.electronics.find({$or:[{"price":230},{"price":120},{"price":75}]})--> hard olarak
+
+
+32//price degeri 230,75,120 olmayan dokumanları getir
+ cevap
+ db.electronics.find({"price": {$nin:[120,230,75]}})
+
+ /=================================================================
+//            findOneAndUpdate - findOneAndReplace
+//=================================================================
+// A - findOneAndReplace()
+//----------------------------
+//   1-) belirtilen koşullara uyan ilk sorguyu bulur ve degistirir.
+//   2-) Komut icerisinde belirtilen kisimlari guncellerken bos birakilan
+//       alanlari kaldirir. (API'lerdeki PUT metoduna benzetilebilir).
+//   3-) Islem sonunda ilgili dokumanin guncellenmemiş halini gosterir.yani ben bunu değiştirdim diye haber veriyor
+//
+// B - findOneAndUpdate()
+//----------------------------
+///  1-) Belirtilen koşullara uyan ilk sorguyu bulur ve degistirir.
+//   2-) Komut icerisinde belirtilen kisimlari guncellerken bos birakilan
+//       alanlari modifiye etmez  (API'lerdeki PATCH metoduna benzetilebilir).
+//   3-) komutun kosul kismindan sonra degislikileri gerceklestirmek icin bir
+//       atomic operator kullanilir. ($set (direk değer verilirse), $inc(arttırma azaltma), $mul (çarpma)vb.)
+//   4)  Islem sonunda ilgili dokumanin guncellenMEmiş halini gosterir.
+//=================================================================
+// ÖNEMLİ : !!!  bu 2 kod çalıştığında dökümanın update olmamış hali ekrana gelir.
+ 
+ 
+ 
+ 33//price i 200 den az olan dokumanı bulup name ini car olarak, fiyatını da 2000 olrak degıstırın
+ cevap
+ db.electronics.findOneAndReplace({"price" :{$lt:200}},{"name":"car","price":2000})
+ 
+ 34//price 100 den buyuk olan dokumanlar içersinde price bilgisi en dusuk olanın name i "En Ucuz" olarak degıstırın
+ cevap
+ db.electronics.findOneAndReplace({"price":{$gt:100}} ,{"name": "En Ucuz"}, {sort :{"price":1}})
+									{FILTRELEME}			{UPDATE}			{OPSIYONEL}
+ 
+ TRİCK : 
+ 
+ 35//yukarıdaki soruda price en buyuk dokumanı EN Pahalı olarak degıstır
+ cevap
+ db.electronics.findOneAndReplace({"price":{$gt:100}} ,{"name": "En Pahalı"}, {sort :{"price":-1}})
+ 
+ 36// price i 100 den buyuk olan dokumanlar içerisinde  
+ cevap
+ db.electronics.findOneAndUpdate({"price":{$gt:100}} ,{$set:{"name": "En Pahalı"}}, {sort :{"price":-1}})
+
+
+37//price bilgisi 100 den kucuk olan dokumanın ısmını "guncellendi" olarak degıstırın diğer fieldler silinmesin
+cevap
+db.electronics.findOneAndUpdate({"price":{$lt:100}},{$set:{"name":"Guncellendi"}})
+
+38// price 100 den kucuk olan dokumanlar ıcınde en kucuk olanın name i "En  Ucuz" yapalım
+cevap
+db.electronics.findOneAndUpdate({"price":{$lt:100}},{$set:{"name":"En Ucuz"}},{sort:{"price":1}})
+
+
+39//price 230 a eşit olan dokumanı bulup fiyatını 250 yapıp ekran cıktısını GUncel haliyle basınız
+cevap
+db.electronics.findOneAndUpdate({"price":{$lt:100}},{$set:{"name":"En Ucuz"}},{sort:"price"})
+
+
+40// price 250 olan dokumaı bulup name i "Gold , price 230 yapıp konsol çıktısında update edilmiş sonucu gösterelim eğer böyle bir dokuman yoksa yenı olusturalım
+cevap
+db.electronics.findOneAndUpdate({"price":{$eq:230}},{$set:{"price":250, "name":"Gold"}},{returnNewDocument : true, upsert:true})
+//returnNewDocument : true --->keywordu yapılan update sonrası konsola guncel halı yazdırılması içindir
+//upsert : true----> keywordu eger sorguda sorgulanan dokuman yoksa oluşturma işini yapar
+
+
+41//Birden fazla dokumanı aynı anda degıstırmek istiyorsak ?
+//price 300 den dusuk olan butun dokumanların name "Woww" yapalım
+cevap
+db.electronics.updateMany({"price":{$lt:300}} ,{$set:{"name":"Woww"}}) ---> guncel komut
+
+
+42// ismi en ucuz olan dokumanı siliniz
+cevap
+db.electronics.deleteOne({"name":"En Ucuz"})
+
+
+43//olmayan bir dokumanı silmeye calısırsam
+cevap
+db.electronics.deleteMany({"name":"XYZ"})
+//Açıklama : deletedCount: 0 değerini verir
+
+
+44//bütün dökümanı silmek istersem
+db.electronics.deleteMany({})
+//2.yol :
+db.electronics.delete()
+//3.yol
+db.electronics.remove({})
+
+
+

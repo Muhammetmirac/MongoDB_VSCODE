@@ -1,0 +1,127 @@
+//=================================================
+//                   AGGREGATION
+//=================================================
+// 1) Aggregation, dokumanlardaki verilerin islenmesi ve hesaplanan
+//    sonuclarin donmesini saglayan islemlerdir.
+//
+// 2) Aggregation islemleri, farklı dokumanlardaki degerleri gruplandirabilir.
+//
+// 3) Bu gruplanan veriler uzerinde cesitli islemlerin gereceklestirelerek tek
+//    bir sonuc degerinin donmesi saglanabilir.
+//
+// 4) MongoDB, 3 farklı yontem ile aggregation gerceklestirmeye izin verir.
+//     A) aggregation pipeline (toplama boru hattı) --> best practice...
+//     B) map-reduce function (map indirgeme)
+//     C) single-purpose aggregation (tek-amaç toplama)
+//
+// 5) Aggregiation, SQL'deki Join islemlerine benzetilebilir.
+//================================================= 
+//             AGGREGATION PIPELINE
+//=================================================
+// SYNTAX
+//
+//   pipeline = [
+//   { $match : { … },
+//   { $group : { … },
+//   { $sort : { … },
+//      ...
+//   ]
+//   db.collectionName.aggregate({pipeline}, {options})
+//
+//  $match() –> Verileri secerken flitrelemek icin
+//  $group({_id : "$field"}) - >islenen verilerin gruplanmasi icin
+//  $sort() -> Sonuclarin siralanmasi icin
+// NOT : VSCode ile yazıldığından , her komut önüne, use("DB_ismi") yazılmalı !!
+
+use('okul');
+db.grades.insertMany([
+{_id:6305, name: "A. MacDyver", "assignment":5, "points" :24},
+{_id:6308, name: "B. Batlock", "assignment":3, "points" :22},
+{_id:6312, name: "M. Tagnum", "assignment":5, "points" :30},
+{_id:6319, name: "R. Stiles", "assignment":2, "points" :12},
+{_id:6322, name: "A. MacDyver", "assignment":2, "points" :14},
+{_id:6334, name: "R. Stiles", "assignment":1, "points" :10}
+]);
+// 1 ) bütün assignmentların toplam pointlerini bulunuz
+use("okul");
+var pipeline = [
+                 {$match:{}},
+                 {$group :{"_id":"$assignment",Toplam_point:{$sum:"$points"}}}
+               ]
+db.grades.aggregate(pipeline);               
+// 2 ) Her assignmentın ortalama point değerlerini bulalım
+use("okul");
+var pipeline = [
+                  {$match : {}},
+                  {$group : {"_id" :"$assignment", ort_Points:{$avg:"$points"}}}
+               ];
+db.grades.aggregate(pipeline);               
+//3 ) Her assigmentın en küçük point değerini bulalım
+use("okul");
+var pipeline = [
+                {$match :{}},
+                {$group : {"_id":"$assignment",min_Point :{$min:"points"}}}
+               ];
+db.grades.aggregate(pipeline);
+//4 ) Assigment sayısı 4 den az olan kayıtların ortalama point sayısını bulalım
+use("okul");
+var pipeline = [
+                 {$match : {"assignment": {$lt:4 }}},
+                 {$group : {"_id":"$assignment",ort_Points:{$avg:"points"}}}
+                 ];
+db.grades.aggregate(pipeline)
+//5 ) ismi A ile başlıyan dökümanların toplam point sayısını bulunuz
+use("okul");
+var pipeline = [
+                 {$match : {"name":{$regex:"^A"}}},
+                 {$group : {"_id":null, total_points :{$sum:"$points"}}}
+               ];
+db.grades.aggregate(pipeline)       ;       
+
+//6 ) ismi s ile biten dökümanların toplam point sayısını bulalım
+use("okul");
+var pipeline = [
+                 {$match:{"name":{$regex:"s$"}}},
+                 {$group:{"_id":null, totalPoint:{$sum:"$points"}}}
+               ];
+db.grades.aggregate(pipeline)       ;   
+
+//7) points değeri 19 dan düşük olan dökümanların sayısını bulunuz
+use("okul");
+var pipeline = [
+                 {$match:{"points":{$lt:19}}},
+                 {$count: 'Azpoints'}
+               ];
+db.grades.aggregate(pipeline)       ; 
+ //===========================================================================
+        DAY 02
+ //===========================================================================  
+use("okul")
+db.articles.insertMany(
+[{"author":"dave","score":80,"views":100},
+{"author":"dave","score":85,"views":521},
+{"author":"ahn","score":60,"views":1000},
+{"author":"li","score":55,"views":5000},
+{"author":"annT","score":60,"views":50},
+{"author":"li","score":94,"views":999},
+{"author":"ty","score":95,"views":1000},]);
+use("okul")
+db.accounting.insertMany(
+[{"name":"dave","expense":[-80, -40, -50, -120], "earn":[100, 150]},
+{"name":"dave","expense":[-60, -30, -20], "earn":[200, 50, 130]},
+{"name":"ahn","expense":[-80, -40, -50], "earn":[300, 450]},
+{"name":"li","expense":[-80, -120], "earn":[500, 50, 70, 10]},
+{"name":"annT","expense":[-140, -50, -120], "earn":[400]},
+{"name":"li","expense":[-120], "earn":[22, 375, 65]},
+{"name":"ty","expense":[-180, -40, -70, -12], "earn":[500, 650, 400]}]);
+ // ACCOUNTıNG içindeki toplam expense, toplam earn ve net balance değerlerini bulunuz
+use("okul");
+var pipeline = [
+                 {$addFields: {toplam_expense:{$sum:"$expense"}, toplam_earn :{$sum :"$earn"}}},
+                 {$addFields: {net_balance:{$add: ["$toplam_expense","$toplam_earn"]}}},
+              
+               ]
+db.accounting.aggregate(pipeline)
+ // yukarıdaki sorguda netBalance degerini büyükten küçüğe sıralıyalım
+use("okul");
+ // yukarıdakine ek olarak bazı fieldları görmek istemiyorsam ?
